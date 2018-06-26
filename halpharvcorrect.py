@@ -22,37 +22,41 @@ legend = inpath+obsrun+'/Halphalegend.txt'
 outpath = inpath+obsrun+'/final_stuff/halpharvcorrect.txt'
 #where you have the reduced data
 imagepath = inpath+obsrun+'/images/'
-
+#if running in python 3, this will be necessary, removes a weird b that shows up in front of strings
 def removeb(input):
     if input[0] == 'b':
         split = input.split("'")
         return split[1]
     else:
         return input
-
+#getting list of images in obsun
 images = np.loadtxt(file, usecols = (1,), dtype =str)
-    
-fitsfiles = [f for f in listdir(fxcorpath) if isfile(join(fxcorpath, f))]
-rvtemp = np.loadtxt(legend, usecols = (2,))
-bids = np.loadtxt(legend , usecols = (0,), dtype = str)
 
+#getting all fxcor output files
+fitsfiles = [f for f in listdir(fxcorpath) if isfile(join(fxcorpath, f))]
+#pulling out of the legend the rv of the temp used for each spectra
+rvtemp = np.loadtxt(legend, usecols = (2,))
+#pulling ras out of legend for matching purposes
+bids = np.loadtxt(legend , usecols = (0,), dtype = str)
+#removes bs if they are there
 ids = []
 for i in bids:
     ids.append(removeb(i))
 
-
-
+#create rvcorrect file
 text = open(outpath,'w')
+#grabbing only halpha fxcor output files
 files = []
 for l in range(len(fitsfiles)):
     splits = fitsfiles[l].split('_')
     if splits[0][0] == 'h':
         files.append(fitsfiles[l])
+        
 dates = []
 ras =[]
 decs = []
 uts = []
-
+#getting info for rvcorrect out of headers
 for i in range(len(images)):
     file = fits.open(imagepath+str(images[i])+'_nosky.fits')
     head = file[0].header
@@ -65,6 +69,8 @@ for i in range(len(images)):
     decs.append(DEC)
     ut= head['UT']
     uts.append(ut)
+    
+#getting info out of fxcor output files
 for m in range(len(files)):
     parts = files[m].split("_")
     if len(parts) == 4:
@@ -82,10 +88,13 @@ for m in range(len(files)):
     hght = removeb(str(bhght))
     if rvls != 'INDEF':
         rv = float(rvls)
+     #matching header and fxcor info
     if image in images:
         iindex = (images.tolist()).index(image)
+        #matching fxcor and legend info
         if ra in ids:
             index = ids.index(ra)
+            #writing to rvcorrect file and subtracting out template rv
             if rvls != 'INDEF':
                 text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[iindex][0],dates[iindex][1],dates[iindex][2],uts[iindex],ras[iidex],decs[iindex],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
             else:
