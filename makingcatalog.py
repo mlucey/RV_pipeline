@@ -29,7 +29,7 @@ skyflattemp = 0
 #where and what you want save the csv that prints one row per spectra as
 outpathspec = inpath+'obs_'+cluster+'_catalog.csv'
 #where and what you want save the csv that prints one row per star as
-outpathspec = inpath+cluster+'_catalog.csv'
+outpathstar = inpath+cluster+'_catalog.csv'
 
 def number1(x):
     a = (ras[x],decs[x],int(ids[x]),rs[x],r_js[x])
@@ -176,7 +176,7 @@ for i in obsrun:
             halphaverrs.append(bhverrs[l])
             if halpharvs[l] != 'INDEF':
                 #donehrv.append(str("{0:.3f}".format(float(halpharvs[l]))))
-                donehrv.append(str("{0:.3f}".format(float(halpharvs[l])-float(temprvs[index]))))
+                donehrv.append(str("{0:.3f}".format(float(halpharvs[l])-float(temprvs[index]-float(skyflattemp))))
             else:
                 donehrv.append('INDEF')
     """
@@ -261,7 +261,7 @@ for i in obsrun:
             allhghts.append(hghts[k])
 
 #write to csv file this does one row per spectra                              
-with open('/Volumes/MADDIE/allphoenixobs_'+cluster+'_catalog.csv','w') as f:
+with open(outpathspec,'w') as f:
     writer = csv.writer(f)
     writer.writerow(['RA','DEC','r','r-J','obsrun','image','ap','hjd','rv','err','hght'])
     for i in range(len(allras)):
@@ -272,7 +272,7 @@ norepeats = list(set(allras))
 
 
 #write to csv file, one row per star
-with open('/Volumes/MADDIE/allphoenix_'+cluster+'_catalog.csv','w') as f:
+with open(outpathstar,'w') as f:
     writer = csv.writer(f)
     for i in range(len(norepeats)):
         indexs = list_duplicates_of(allras,norepeats[i])
