@@ -14,6 +14,19 @@ obsrun = ['Apr2018','Mar2018','Dec2016','Feb2017','Feb2016','Mar2016']
 cluster = 'prae'
 first = '8'
 #put in 8 for praesepe and 3 for pleiades
+#location of obsrun folder
+inpath = '/Volumes/MADDIE/'
+#rvcorrect and rv.dat file location inside the obsrun folder
+rvcorrect = '/final_stuff/'
+#folder inside of obsrun folder that holds the raw data and the reduced data
+imagefolder = '/images/'
+#location of fxcor outputs (specifaically for the skyflats)
+fxcorpath = '/final_stuff/donefxcor'
+#first letter of skyflatfxcor ouputs (should be different than object ouputs)
+firstskyflat = 'R'
+#rv of the temp used for the skyflats (in km/s)
+skyflattemp = 0
+#what you want to name the csv that prints one row per spe
 
 def number1(x):
     a = (ras[x],decs[x],int(ids[x]),rs[x],r_js[x])
@@ -51,25 +64,25 @@ allruns = []
 
 #loading in rvs and aps from rv.dat and rvcorrect.txt
 for i in obsrun:
-    baps = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/rvcorrect.txt', usecols = (9,))
-    #bhaps = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/halpharvcorrect.txt', usecols = (9,))
-    rvs = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/rv.dat', usecols = (2,),dtype =str)
-    #halpharvs = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/halpharv.dat', usecols = (2,),dtype = str)
-    files = np.loadtxt('/Volumes/MADDIE/'+i+'/files.txt', usecols = (1,), dtype = str)
-    origfiles = np.loadtxt('/Volumes/MADDIE/'+i+'/files.txt', usecols = (0,), dtype = str)
+    baps = np.loadtxt(inpath+i+rvcorect+'rvcorrect.txt', usecols = (9,))
+    #bhaps = np.loadtxt(inpath+i+rvcorrect+'halpharvcorrect.txt', usecols = (9,))
+    rvs = np.loadtxt(inpath+i+rvcorrect+'rv.dat', usecols = (2,),dtype =str)
+    #halpharvs = np.loadtxt(inpath+i+rvcorrect+'halpharv.dat', usecols = (2,),dtype = str)
+    files = np.loadtxt(inpath+i+'/files.txt', usecols = (1,), dtype = str)
+    origfiles = np.loadtxt(inpath+i+'/files.txt', usecols = (0,), dtype = str)
     #getting images,ra and heights from rvcorrect.txt
-    bras = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/rvcorrect.txt', usecols = (8,),dtype = str)
-    #bhras = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/halpharvcorrect.txt', usecols = (8,),dtype = str)
-    bimages = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/rvcorrect.txt', usecols = (12,),dtype = str)
+    bras = np.loadtxt(inpath+i+rvcorrect+'rvcorrect.txt', usecols = (8,),dtype = str)
+    #bhras = np.loadtxt(inpath+i+rvcorrect+'halpharvcorrect.txt', usecols = (8,),dtype = str)
+    bimages = np.loadtxt(inpath+i+rvcorrect+'rvcorrect.txt', usecols = (12,),dtype = str)
     print(bimages,i)
-    #bhimages = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/halpharvcorrect.txt',usecols = (12,),dtype = str)
-    bhghts = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/rvcorrect.txt', usecols = (11,),dtype = str)
-    #bhhghts = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/halpharvcorrect.txt',usecols = (11,), dtype = str)
+    #bhimages = np.loadtxt(inpath+i+rvcorrect+'halpharvcorrect.txt',usecols = (12,),dtype = str)
+    bhghts = np.loadtxt(inpath+i+rvcorrect+'rvcorrect.txt', usecols = (11,),dtype = str)
+    #bhhghts = np.loadtxt(inpath+i+rvcorrect+'halpharvcorrect.txt',usecols = (11,), dtype = str)
     #get hjds, and verrs from rv.dat and rvcorrect files
-    bhjds = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/rv.dat', usecols = (0,))
-    #bhhjds = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/halpharv.dat',usecols = (0,))
-    bverrs = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/rvcorrect.txt', usecols = (10,),dtype = str)
-    #bhverrs = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/halpharvcorrect.txt',usecols = (10,),dtype = str)
+    bhjds = np.loadtxt(inpath+i+rvcorrect+'rv.dat', usecols = (0,))
+    #bhhjds = np.loadtxt(inpath+i+rvcorrect+'halpharv.dat',usecols = (0,))
+    bverrs = np.loadtxt(inpath+i+rvcorrect+'rvcorrect.txt', usecols = (10,),dtype = str)
+    #bhverrs = np.loadtxt(inpath+i+rvcorrect+'halpharvcorrect.txt',usecols = (10,),dtype = str)
     #get ra, dec, id, rs, r-js, and aps from original images
     ogras = []
     checkras = []
@@ -78,8 +91,8 @@ for i in obsrun:
     ogr_js = []
     ogids = []
     for j in range(len(files)):
-        file = fits.open('/Volumes/MADDIE/'+i+'/images/'+files[j]+'_nosky.fits')
-        origfile = fits.open('/Volumes/MADDIE/'+i+'/images/'+origfiles[j]+'.fits')
+        file = fits.open(inpath+i+imagefolder+files[j]+'_nosky.fits')
+        origfile = fits.open(inpath+i+imagefolder+origfiles[j]+'.fits')
         head = origfile[0].header
         for k in range(1,101):
             splits = head['SLFIB'+str(k)].split(" ")
@@ -96,16 +109,19 @@ for i in obsrun:
                 ogrs.append(r)
                 ogr_js.append(r_j)
                 ogids.append(id)
-    fitsfiles = [f for f in listdir('/Volumes/MADDIE/'+i+'/final_stuff/donefxcor') if isfile(join('/Volumes/MADDIE/'+i+'/final_stuff/donefxcor', f))]
+    #grabbing all fxcor ouputs
+    fitsfiles = [f for f in listdir(inpath+i+fxcorpath) if isfile(join(inpath+i+fxcorpath, f))]
 
     reds = []
     redaps = []
+    #grabbing only skyflat outputs
     for k in range(len(fitsfiles)):
-        if fitsfiles[k][0] == 'p':
+        if fitsfiles[k][0] == firstskyflat:
             reds.append(fitsfiles[k])
     temprvs = []
+    #grabbing rv and ap information from fxcor skyflat outputs
     for j in reds:
-        temprv = np.loadtxt('/Volumes/MADDIE/'+i+'/final_stuff/donefxcor/'+str(j), usecols = (11,))
+        temprv = np.loadtxt(inpath+i+fxcorpath+'/'+str(j), usecols = (11,))
         temprvs.append(temprv)
         reds1 = j.split("s")
         reds2 = reds1[1].split(".")
@@ -118,6 +134,7 @@ for i in obsrun:
     hghts = []
     hjds = []
     verrs = []
+    #removing info for stars that do not have a skyflat for their aperture and prints the ones that get cut
     for l in range(len(rvs)):
         if str(int(baps[l])) in redaps:
             index = redaps.index(str(int(baps[l])))
@@ -127,9 +144,10 @@ for i in obsrun:
             hghts.append(bhghts[l])
             hjds.append(bhjds[l])
             verrs.append(bverrs[l])
+            #subtracting skyflat rv from rv
             if rvs[l] != 'INDEF':
                 #donerv.append(str("{0:.3f}".format(float(rvs[l]))))
-                donerv.append(str("{0:.3f}".format(float(rvs[l])-float(temprvs[index]))))
+                donerv.append(str("{0:.3f}".format(float(rvs[l])-float(temprvs[index])-float(skyflattemp)))
             else:
                 donerv.append('INDEF')
         else:
@@ -143,6 +161,7 @@ for i in obsrun:
     halphahjds = []
     halphaverrs = []
     """
+    #does the same as above but for the halpha spectra
     for l in range(len(halpharvs)):
         if str(int(bhaps[l])) in redaps:
             index = redaps.index(str(int(bhaps[l])))
@@ -158,15 +177,20 @@ for i in obsrun:
             else:
                 donehrv.append('INDEF')
     """
+      
     nopeats = list(set(halpharas))
     hindexs = []
     seenonce = []
     seentwice = []
     seenthrice = []
+    #gets indexs of repeats in halphras                          
     for m in nopeats:
         hindexs.append(list_duplicates_of(halpharas,m))
+    #matching fxcor and info from raw data header                          
     for k in range(len(ras)):
         index = checkras.index(str(ras[k]))
+        #using data from halpha if it was run in the halpha pipeline
+        #still has indexing issue problem is there are repeats in ras[k] and in halpha, so having trouble matching them
         if ras[k] in halpharas:
             nindex = nopeats.index(ras[k])
             if ras[k] in seenonce and ras[k] not in seentwice and len(hindexs[nindex]) >1:
@@ -233,6 +257,7 @@ for i in obsrun:
             allerrs.append(verrs[k])
             allhghts.append(hghts[k])
 
+#write to csv file this does one row per spectra                              
 with open('/Volumes/MADDIE/allphoenixobs_'+cluster+'_catalog.csv','w') as f:
     writer = csv.writer(f)
     writer.writerow(['RA','DEC','r','r-J','obsrun','image','ap','hjd','rv','err','hght'])
