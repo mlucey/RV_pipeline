@@ -5,46 +5,60 @@ import os
 from os import listdir
 from os.path import isfile, join
 
-#creates file to run rvcorrect and get helivocentric corrected rvs
+# creates a file to run in rvcorrect to get heliocentrically corrected rvs 
+#After you have run it paste this line into a pyraf window: 
+#rvcorrect f=rvcorrect.txt > rv.dat
 
 obsrun = 'Apr2018'
 
 inpath = '/Volumes/MADDIE/'
-
+#location of files.txt with list of images and correspondng orig images
+file = inpath+obsrun+'/files.txt'
+#location of fxcor outputs (created in runfxcor_new.py)
+fxcorpath = inpath+obsrun+'/final_stuff/donefxcor'
+#location of halpha legend file (created in run_fxcor_new.py)
+legend = inpath+obsrun+'/legend.txt'
+#where you want to write the rvcorrect.txt file
+outpath = inpath+obsrun+'/final_stuff/rvcorrect.txt'
+#where you have the reduced data
+imagepath = inpath+obsrun+'/images/'
+#if running in python 3, this will be necessary, removes a weird b that shows up in front of strings
 def removeb(input):
     if input[0] == 'b':
         split = input.split("'")
         return split[1]
     else:
         return input
+#getting list of images in obsun
+images = np.loadtxt(file, usecols = (1,), dtype =str)
 
-
-fitsfiles = [f for f in listdir(inpath+obsrun+'/final_stuff/donefxcor') if isfile(join(inpath+obsrun+'/final_stuff/donefxcor', f))]
-rvtemp = np.loadtxt(inpath+obsrun+'/final_stuff/legend.txt', usecols = (3,))
-bids = np.loadtxt(inpath+obsrun+'/final_stuff/legend.txt' , usecols = (1,), dtype = str)
-
+#getting all fxcor output files
+fitsfiles = [f for f in listdir(fxcorpath) if isfile(join(fxcorpath, f))]
+#pulling out of the legend the rv of the temp used for each spectra
+rvtemp = np.loadtxt(legend, usecols = (2,))
+#pulling ras out of legend for matching purposes
+bids = np.loadtxt(legend , usecols = (0,), dtype = str)
+#removes bs if they are there
 ids = []
 for i in bids:
     ids.append(removeb(i))
 
-for i in range(len(ids)):
-    splits = ids[i].split(':')
-    ids[i] = splits[0]+splits[1]+splits[2]
-
-
-text = open(inpath+obsrun+'/final_stuff/rvcorrect.txt','w')
+#create rvcorrect file
+text = open(outpath,'w')
+#grabbing only object fxcor output files
 files = []
 for l in range(len(fitsfiles)):
     splits = fitsfiles[l].split('_')
     if splits[0][0] == 'P':
         files.append(fitsfiles[l])
+        
 dates = []
 ras =[]
 decs = []
 uts = []
-
+#getting info for rvcorrect out of headers
 for i in range(len(images)):
-    file = fits.open('/Volumes/MADDIE/'+obsrun+'/images/'+str(images[i])+'_nosky.fits')
+    file = fits.open(imagepath+str(images[i])+'_nosky.fits')
     head = file[0].header
     date = head['DATE-OBS'][0:10]
     pieces = date.split('-')
@@ -55,95 +69,34 @@ for i in range(len(images)):
     decs.append(DEC)
     ut= head['UT']
     uts.append(ut)
+    
+#getting info out of fxcor output files
 for m in range(len(files)):
     parts = files[m].split("_")
-    if len(parts) == 3:
-        image = parts[0]+'_'+parts[1]
-        ra = parts[2][0:8]
+    if len(parts) == 4:
+        image = parts[1]+'_'+parts[2]
+        ra = parts[3][0:8]
     else:
-        image = parts[0]
-        ra = parts[1][0:8]
-    brvls = np.loadtxt(inpath+obsrun+'/final_stuff/donefxcor/'+str(files[m]),usecols = (11,),dtype=str)
-    aps = np.loadtxt(inpath+obsrun+'/final_stuff/donefxcor/'+str(files[m]), usecols = (4,))
-    berr = np.loadtxt(inpath+obsrun+'/final_stuff/donefxcor/'+str(files[m]), usecols = (13,), dtype = str)
-    bhght = np.loadtxt(inpath+obsrun+'/final_stuff/donefxcor/'+str(files[m]), usecols = (7,), dtype = str)
+        image = parts[1]
+        ra = parts[2][0:8]
+    brvls = np.loadtxt(fxcorpath+'/'+str(files[m]),usecols = (11,),dtype=str)
+    aps = np.loadtxt(fxcorpath+'/'+str(files[m]), usecols = (4,))
+    berr = np.loadtxt(fxcorpath+'/'+str(files[m]), usecols = (13,), dtype = str)
+    bhght = np.loadtxt(fxcorpath+'/'+str(files[m]), usecols = (7,), dtype = str)
     rvls = removeb(str(brvls))
     err = removeb(str(berr))
     hght = removeb(str(bhght))
     if rvls != 'INDEF':
         rv = float(rvls)
-    if image == images[0]:
+     #matching header and fxcor info
+    if image in images:
+        iindex = (images.tolist()).index(image)
+        #matching fxcor and legend info
         if ra in ids:
             index = ids.index(ra)
+            #writing to rvcorrect file and subtracting out template rv
             if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[0][0],dates[0][1],dates[0][2],uts[0],ras[0],decs[0],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image ))
+                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[iindex][0],dates[iindex][1],dates[iindex][2],uts[iindex],ras[iidex],decs[iindex],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
             else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[0][0],dates[0][1],dates[0][2],uts[0],ras[0],decs[0],0,rvls,ra,ids[index],aps,err,hght,image))
-
-    if image == images[1]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[1][0],dates[1][1],dates[1][2],uts[1],ras[1],decs[1],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[1][0],dates[1][1],dates[1][2],uts[1],ras[1],decs[1],0,rvls,ra,ids[index],aps,err,hght,image))
-
-    if image == images[2]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[2][0],dates[2][1],dates[2][2],uts[2],ras[2],decs[2],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[2][0],dates[2][1],dates[2][2],uts[2],ras[2],decs[2],0,rvls,ra,ids[index],aps,err,hght,image))
-
-    if image == images[3]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[3][0],dates[3][1],dates[3][2],uts[3],ras[3],decs[3],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[3][0],dates[3][1],dates[3][2],uts[3],ras[3],decs[3],0,rvls,ra,ids[index],aps,err,hght,image))
-
-    if image == images[4]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[4][0],dates[4][1],dates[4][2],uts[4],ras[4],decs[4],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[4][0],dates[4][1],dates[4][2],uts[4],ras[4],decs[4],0,rvls,ra,ids[index],aps,err,hght,image))
-
-    if image == images[5]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[5][0],dates[5][1],dates[5][2],uts[5],ras[5],decs[5],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[5][0],dates[5][1],dates[5][2],uts[5],ras[5],decs[5],0,rvls,ra,ids[index],aps,err,hght,image))
-
-    if image == images[6]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[6][0],dates[6][1],dates[6][2],uts[6],ras[6],decs[6],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[6][0],dates[6][1],dates[6][2],uts[6],ras[6],decs[6],0,rvls,ra,ids[index],aps,err,hght,image))
-"""
-    if image == images[7]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[7][0],dates[7][1],dates[7][2],uts[7],ras[7],decs[7],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[7][0],dates[7][1],dates[7][2],uts[7],ras[7],decs[7],0,rvls,ra,ids[index],aps,err,hght,image))
-
-    if image == images[8]:
-        if ra in ids:
-            index = ids.index(ra)
-            if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[8][0],dates[8][1],dates[8][2],uts[8],ras[8],decs[8],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
-            else:
-                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[8][0],dates[8][1],dates[8][2],uts[8],ras[8],decs[8],0,rvls,ra,ids[index],aps,err,hght,image))
-"""
+                text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[iindex][0],dates[iindex][1],dates[iindex][2],uts[iindex],ras[iindex],decs[iindex],0,rvls,ra,ids[index],aps,err,hght,image))
 text.close()
-
-#now run rvcorrect in pyraf >> rvcorrect f=rvcorrect.txt > rv.dat
