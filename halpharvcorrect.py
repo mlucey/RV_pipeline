@@ -8,36 +8,15 @@ from os.path import isfile, join
 # rvcorrect.txt with ap and error
 #CHANGE NUM. OF LOOPS
 
-#Apr2018
-images = ['PB1','PB2','PF2','PF3']
 obsrun = 'Apr2018'
 
 inpath = '/Volumes/MADDIE/'
-"""
-#Feb2016
-images = ['PF1_1','PF1_2','PF3_1','PF3_2','PF4','PF5','PB3','PF2_1','PF2_2']
-obsrun = 'Feb2016'
-"""
-"""
-#Feb2017
-images = ['PF1','PF2','PB1']
-obsrun = 'Feb2017'
-"""
-"""
-#Mar2018
-images = ['PB1','PB2','PB3','PF1']
-obsrun = 'Mar2018'
-"""
-"""
-#Dec2016
-images = ['PF1','PF2','PB1']
-obsrun = 'Dec2016'
-"""
-"""
-#Mar2016
-images = ['PB1','PB2','PB3','PF1','PF2','PF4','PF5']
-obsrun = 'Mar2016'
-"""
+#location of files.txt with list of images and correspondng orig images
+file = inpath+obsrun+'/files.txt'
+#location of fxcor outputs
+fxcorpath = inpath+obsrun+'/final_stuff/donefxcor'
+#location of
+
 def removeb(input):
     if input[0] == 'b':
         split = input.split("'")
@@ -45,11 +24,11 @@ def removeb(input):
     else:
         return input
 
-images = 
+images = np.loadtxt(file, usecols = (1,), dtype =str)
     
-fitsfiles = [f for f in listdir(inpath+obsrun+'/final_stuff/donefxcor') if isfile(join(inpath+obsrun+'/final_stuff/donefxcor', f))]
-rvtemp = np.loadtxt(inpath+obsrun+'/halphalegend.txt', usecols = (2,))
-bids = np.loadtxt(inpath+obsrun+'/halphalegend.txt' , usecols = (0,), dtype = str)
+fitsfiles = [f for f in listdir(fxcorpath) if isfile(join(fxcorpath, f))]
+rvtemp = np.loadtxt(inpath+obsrun+'/Halphalegend.txt', usecols = (2,))
+bids = np.loadtxt(inpath+obsrun+'/Halphalegend.txt' , usecols = (0,), dtype = str)
 
 ids = []
 for i in bids:
