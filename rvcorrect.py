@@ -5,40 +5,11 @@ import os
 from os import listdir
 from os.path import isfile, join
 
-# rvcorrect.txt with ap and error
-#CHANGE NUM. OF LOOPS
-#origfilestart =
+#creates file to run rvcorrect and get helivocentric corrected rvs
 
-"""
-#Apr2018
-images = ['PB1','PB2','PF2','PF3']
 obsrun = 'Apr2018'
-"""
-inpath = '/Volumes/MADDIE/'
-"""
-#Feb2016
-images = ['PF1_1','PF1_2','PF3_1','PF3_2','PF4','PF5','PB3','PF2_1','PF2_2']
-obsrun = 'Feb2016'
-"""
-"""
-#Feb2017
-images = ['PF1','PF2','PB1']
-obsrun = 'Feb2017'
-"""
-"""
-#Mar2018
-images = ['PB1','PB2','PB3','PF1']
-obsrun = 'Mar2018'
-"""
-"""
-#Dec2016
-images = ['PF1','PF2','PB1']
-obsrun = 'Dec2016'
 
-"""
-#Mar2016
-images = ['PB1','PB2','PB3','PF1','PF2','PF4','PF5']
-obsrun = 'Mar2016'
+inpath = '/Volumes/MADDIE/'
 
 def removeb(input):
     if input[0] == 'b':
@@ -176,43 +147,3 @@ for m in range(len(files)):
 text.close()
 
 #now run rvcorrect in pyraf >> rvcorrect f=rvcorrect.txt > rv.dat
-
-"""
-#creating catalog --Don't use anymore
-bvhelio = np.loadtxt('/Volumes/MADDIE/Feb2017/final_stuff/rv.dat',usecols = (2,), dtype = str)
-bra = np.loadtxt('/Volumes/MADDIE/Dec2016/final_stuff/rvcorrect.txt', usecols = (8,), dtype = str)
-bids = np.loadtxt('/Volumes/MADDIE/Dec2016/final_stuff/rvcorrect.txt', usecols = (9,) , dtype = str)
-fitsfiles = [f for f in listdir('/Volumes/MADDIE/Dec2016/final_stuff/donefxcor') if isfile(join('/Volumes/MADDIE/Dec2016/final_stuff/donefxcor', f))]
-files = []
-for m in fitsfiles:
-    if m[0] =='P':
-        files.append(m)
-
-praetxt = open('/Volumes/MADDIE/Dec2016/final_stuff/praervs.txt','w')
-pleitxt = open('/Volumes/MADDIE/Dec2016/final_stuff/pleirvs.txt', 'w')
-vhelio = []
-ra = []
-ids = []
-
-for i in range(len(bvhelio)):
-    parts = files[i].split("_")
-    pv = bvhelio[i].split("'")
-    pra = bra[i].split("'")
-    pids = bids[i].split("'")
-    vhelio.append(pv[1])
-    ra.append(pra[1])
-    ids.append(pids[1])
-    if parts[0][0:2] == 'Pl':
-        if ra[i] == parts[2]:
-            pleitxt.write("%6s %6s %8s %4s %5s\n" % (ra[i],ids[i],parts[0]+parts[1]))
-        if ra[i] == parts[1]:
-            pleitxt.write("%6s %6s %8s %4s %3s\n" % (ra[i],ids[i],parts[0]))
-    else:
-        if ra[i] == parts[2]:
-            praetxt.write("%6s %6s %8s %4s %5s\n" % (ra[i],ids[i],parts[0]+parts[1]))
-        if ra[i] == parts[1]:
-            praetxt.write("%6s %6s %8s %4s %3s\n" % (ra[i],ids[i],parts[0]))
-praetxt.close()
-pleitxt.close()
-
-"""
