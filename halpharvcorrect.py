@@ -7,15 +7,6 @@ from os.path import isfile, join
 
 # rvcorrect.txt with ap and error
 #CHANGE NUM. OF LOOPS
-"""
-#Mar2016
-origimages= ['March2016073','March2016081','March2016047','March2016053','March2016042','march2016025','march2016033']
-#origfilestart =
-images = ['PF1','PB1','PB2','PB3']
-obsrun = 'Mar2018'
-
-#origfilestart =
-"""
 
 #Apr2018
 images = ['PB1','PB2','PF2','PF3']
@@ -54,7 +45,8 @@ def removeb(input):
     else:
         return input
 
-
+images = 
+    
 fitsfiles = [f for f in listdir(inpath+obsrun+'/final_stuff/donefxcor') if isfile(join(inpath+obsrun+'/final_stuff/donefxcor', f))]
 rvtemp = np.loadtxt(inpath+obsrun+'/halphalegend.txt', usecols = (2,))
 bids = np.loadtxt(inpath+obsrun+'/halphalegend.txt' , usecols = (0,), dtype = str)
