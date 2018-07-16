@@ -12,12 +12,9 @@ from pyraf import iraf
 
 #run in pyraf window
 print('loading RV info')
+#list of template files you want to edit, assumes these files have wav column first (in angstroms) and flux column second. 
 #list = np.loadtxt('RV_full_info.txt', dtype='string', skiprows=1, usecols=0, unpack=True)
 list = np.loadtxt('RV_full_ESO.txt', dtype='string', skiprows=1, usecols=0, unpack=True)
-
-
-#list of template files you want to edit, assumes these files have wav column first (in angstroms) and flux column second. 
-#list = ['1650473i','1514217i','1629119i','1647952i','1649165i','1741422i','1787492i','1756192p','1688171i','1789183i']
 #where you have the orig ascii filaes saved
 inpath = '/Users/Natalie/mann/templates/'
 #what you want to new begining of the new ascii and fits files to be (or you can go down and totally change the file name)
@@ -58,6 +55,4 @@ for i in list:
         iraf.rspectext(inpath+outname+i+'.ascii', outpath+outname+i+'.fits', dtype= 'interp')
     except:
         print(inpath+i+'.ascii'+' failed')
-    #newdata = rebin_spec(goodwav,goodflux,objwav)
-    #file= open(inpath+outname+i+'.ascii',"w")
-    
+
