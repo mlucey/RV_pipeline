@@ -1,6 +1,6 @@
 from astropy.io import fits
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 from os import listdir
 from os.path import isfile, join
@@ -9,19 +9,19 @@ from os.path import isfile, join
 #After you have run it paste this line into a pyraf window: 
 #rvcorrect f=rvcorrect.txt > rv.dat
 
-obsrun = 'Apr2018'
+obsrun = 'Mar2016'
 
-inpath = '/Volumes/MADDIE/'
+inpath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/'
 #location of files.txt with list of images and correspondng orig images
-file = inpath+obsrun+'/files.txt'
+file = inpath+'/files.txt'
 #location of fxcor outputs (created in runfxcor_new.py)
-fxcorpath = inpath+obsrun+'/final_stuff/donefxcor'
+fxcorpath = inpath+'/results/'
 #location of halpha legend file (created in run_fxcor_new.py)
-legend = inpath+obsrun+'/legend.txt'
+legend = inpath+'/results/legend.txt'
 #where you want to write the rvcorrect.txt file
-outpath = inpath+obsrun+'/final_stuff/rvcorrect.txt'
+outpath = inpath+'/results/rvcorrect.txt'
 #where you have the reduced data
-imagepath = inpath+obsrun+'/images/'
+imagepath = inpath
 #if running in python 3, this will be necessary, removes a weird b that shows up in front of strings
 def removeb(input):
     if input[0] == 'b':
@@ -29,20 +29,22 @@ def removeb(input):
         return split[1]
     else:
         return input
-#getting list of images in obsun
-images = np.loadtxt(file, usecols = (1,), dtype =str)
+#getting list of images in obsrun
+images = np.loadtxt(file, usecols = (1), dtype =str)
 
 #getting all fxcor output files
 fitsfiles = [f for f in listdir(fxcorpath) if isfile(join(fxcorpath, f))]
-#pulling out of the legend the rv of the temp used for each spectra
-rvtemp = np.loadtxt(legend, usecols = (2,))
+#pulling out of the legend the rv of the template used for each spectra
+rvtemp = np.loadtxt(legend, usecols = (3))
 #pulling ras out of legend for matching purposes
-bids = np.loadtxt(legend , usecols = (0,), dtype = str)
+bids = np.loadtxt(legend , usecols = (1), dtype = str)
 #removes bs if they are there
 ids = []
 for i in bids:
     ids.append(removeb(i))
 
+
+matchids = [s.replace(':', '') for s in ids]
 #create rvcorrect file
 text = open(outpath,'w')
 #grabbing only object fxcor output files
@@ -73,12 +75,12 @@ for i in range(len(images)):
 #getting info out of fxcor output files
 for m in range(len(files)):
     parts = files[m].split("_")
-    if len(parts) == 4:
-        image = parts[1]+'_'+parts[2]
-        ra = parts[3][0:8]
-    else:
-        image = parts[1]
+    if len(parts) == 3:
+        image = parts[0]+'_'+parts[1]
         ra = parts[2][0:8]
+    else:
+        image = parts[0]
+        ra = parts[1][0:8]
     brvls = np.loadtxt(fxcorpath+'/'+str(files[m]),usecols = (11,),dtype=str)
     aps = np.loadtxt(fxcorpath+'/'+str(files[m]), usecols = (4,))
     berr = np.loadtxt(fxcorpath+'/'+str(files[m]), usecols = (13,), dtype = str)
@@ -92,11 +94,11 @@ for m in range(len(files)):
     if image in images:
         iindex = (images.tolist()).index(image)
         #matching fxcor and legend info
-        if ra in ids:
-            index = ids.index(ra)
+        if ra in matchids:
+            index = matchids.index(ra)
             #writing to rvcorrect file and subtracting out template rv
             if rvls != 'INDEF':
-                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[iindex][0],dates[iindex][1],dates[iindex][2],uts[iindex],ras[iidex],decs[iindex],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
+                text.write("%4s %2s %2s %8s %8s %8s %1s %6.3f %8s %4s %3s %6.3f %.3f %4s\n" % (dates[iindex][0],dates[iindex][1],dates[iindex][2],uts[iindex],ras[iindex],decs[iindex],0,(rv+rvtemp[index]),ra,ids[index],aps,float(err),float(hght),image))
             else:
                 text.write("%4s %2s %2s %8s %8s %8s %1s %5s %8s %4s %3s %6s %5s %4s\n" % (dates[iindex][0],dates[iindex][1],dates[iindex][2],uts[iindex],ras[iindex],decs[iindex],0,rvls,ra,ids[index],aps,err,hght,image))
 text.close()
