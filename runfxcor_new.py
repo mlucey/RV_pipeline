@@ -78,22 +78,7 @@ for j in range(len(images)):
             objwav = imagewav[200:1800]
             listflux = flux.tolist()
             maxindex = listflux.index(max(flux))
-            # have this if statement because 2 of the spectra would get strange errors if we tried to not correlate the h-alpha region
-            if (images[j] == 'PF2' and obsrun == 'Dec2016' and str(int(aps[index]))  == '17') or (images[j] == 'PF1' and obsrun == 'Feb2017' and str(int(aps[index]))  == '9'):
-                        #We're going to run every star against every template, but only keep the result that is the best. 
-                        for k in range(len(templatelist)):
-                            try:
-                                iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[k]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", output = outpath+images[j]+"_"+str(writeras[index])+'_all', verbose='txtonly', interactive='no')
-                            except:
-                                print(images[j]+' and '+templatelist[k]+' did not work')
-                        height, fwhm = np.loadtxt(outpath+images[j]+"_"+str(writeras[index])+'_all.txt', dtype='string', usecols=(7,8), unpack=True)
-                        height[height == 'INDEF'] = '0.0'
-                        height = np.asfarray(height,float)
-                        best = np.argmax(height)
-                        iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
-                        text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
-            else:
-                try:
+            try:
                     for k in range(len(templatelist)):
                         try:
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[k]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample = region, output = outpath+images[j]+"_"+str(writeras[index])+'_all', verbose='txtonly', interactive='no')
@@ -105,8 +90,8 @@ for j in range(len(images)):
                     best = np.argmax(height)
                     iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
                     text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
-                except:
-                    text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail'))
+               except:
+                    text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail')
         else:
             print(splits[0])
 text.close()
