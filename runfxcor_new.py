@@ -17,12 +17,17 @@ legendpath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/results/'
 filepath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/'
 #where you have the templates(the have the same start so I included the start here too)
 temppath = '/Users/Natalie/mann/templates/'
-#where you want the fxcor outputs saved(all fxcor outputs for each data run should be in the same place)
-outpath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/results/'
-#the templates to correlate against
+#where you want the chosen template fxcor outputs saved(all fxcor outputs for each data run should be in the same place)
+outpath = '/Volumes/MADDIE/'+obsrun+'/results/donefxcor/'
+#where you want all fxcor outputs saved
+alloutpath = '/Volumes/MADDIE/'+obsrun+'/results/alldonefxcor/'
+#where you want the halpha fxcor outputs saved
+halphaoutpath = '/Volumes/MADDIE/'+obsrun+'/results/halphafxcor/'
 
 templatelist = np.loadtxt(temppath+'RV_singlesource.txt', dtype='string', skiprows=1, usecols=0, unpack=True)
+halphatemplatelist = np.loadtxt(temppath+'RV_halpha.txt', dtype='string', skiprows=1, usecols=0, unpack=True)
 rvs, rverrs = np.loadtxt(temppath+'RV_singlesource.txt', dtype='float', skiprows=1, usecols=(10,12), unpack=True)
+hrvs, hrverrs = np.loadtxt(temppath+'RV_halpha.txt', dtype='float', skiprows=1, usecols=(10,12), unpack=True)
 
 
 #feb2017 region of spectrum to correlate if you want to avoid halpha
@@ -38,7 +43,7 @@ def wav(image):
 #keeps track of which spectrum was run with which template
 text = open(legendpath+'legend.txt','w')
 #keeps track of which spectrum did not correlate the halpha region
-halphatext = open(legendpath+'noHalphalgend.txt','w')
+halphatext = open(legendpath+'Halphalgend.txt','w')
 
 images = np.loadtxt(filepath+'files.txt', usecols = (1,),dtype = str)
 origimages = np.loadtxt(filepath+'files.txt', usecols = (0,),dtype = str)
@@ -81,15 +86,33 @@ for j in range(len(images)):
             try:
                     for k in range(len(templatelist)):
                         try:
-                            iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[k]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample = region, output = outpath+images[j]+"_"+str(writeras[index])+'_all', verbose='txtonly', interactive='no')
+                            iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[k]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample = region, output = alloutpath+images[j]+"_"+str(writeras[index])+'_all', verbose='txtonly', interactive='no')
                         except:
                             print(images[j]+' and '+templatelist[k]+' did not work')
                     height, fwhm = np.loadtxt(outpath+images[j]+"_"+str(writeras[index])+'_all.txt', dtype='string', usecols=(7,8), unpack=True)
                     height[height == 'INDEF'] = '0.0'
                     height = np.asfarray(height,float)
                     best = np.argmax(height)
-                    iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
-                    text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
+                    if height[best] < .5:
+                        for k in range(len(halphatemplatelist)):
+                            try:
+                                iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+halphatemplatelist[k]+'.fits',apertures = str(int(aps[index])), function = 'gaussian', background='INDEF', osample='*', rsample = '*', output = halphaoutpath+images[j]+'_'+str(writeras[index])+'_halpha', verbose='txtonly', interactive='no')
+                            except:
+                                print('Halpha '+images[j]+' and '+halphatemplatelist[k]+' did not work')
+                        hheight, hfwhm = np.loadtxt(outpath+images[j]+"_"+str(writeras[index])+'_halpha.txt', dtype='string', usecols=(7,8), unpack=True)
+                        hheight[hheight == 'INDEF'] = '0.0'
+                        hheight = np.asfarray(hheight,float)
+                        hbest = np.argmax(hheight)
+                        if height[best] < hheight[hbest]:
+                            iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+halphatemplatelist[hbest]+'.fits',apertures = str(int(aps[index])), function = 'gaussian', background='INDEF', osample='*', rsample = '*', output = outpath+images[j]+'_'+str(writeras[index])+'', verbose='txtonly', interactive='no')
+                            text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],halphatemplatelist[hbest],hrvs[hbest]))
+                            halphatext.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
+                        else:
+                            iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
+                            text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
+                    else:
+                        iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
+                        text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
                except:
                     text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail'))
         else:
