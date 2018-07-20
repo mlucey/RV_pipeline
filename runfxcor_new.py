@@ -89,7 +89,7 @@ for j in range(len(images)):
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[k]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample = region, output = alloutpath+images[j]+"_"+str(writeras[index])+'_all', verbose='txtonly', interactive='no')
                         except:
                             print(images[j]+' and '+templatelist[k]+' did not work')
-                    height, fwhm = np.loadtxt(outpath+images[j]+"_"+str(writeras[index])+'_all.txt', dtype='string', usecols=(7,8), unpack=True)
+                    height, fwhm = np.loadtxt(alloutpath+images[j]+"_"+str(writeras[index])+'_all.txt', dtype='string', usecols=(7,8), unpack=True)
                     height[height == 'INDEF'] = '0.0'
                     height = np.asfarray(height,float)
                     best = np.argmax(height)
@@ -99,7 +99,7 @@ for j in range(len(images)):
                                 iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+halphatemplatelist[k]+'.fits',apertures = str(int(aps[index])), function = 'gaussian', background='INDEF', osample='*', rsample = '*', output = halphaoutpath+images[j]+'_'+str(writeras[index])+'_halpha', verbose='txtonly', interactive='no')
                             except:
                                 print('Halpha '+images[j]+' and '+halphatemplatelist[k]+' did not work')
-                        hheight, hfwhm = np.loadtxt(outpath+images[j]+"_"+str(writeras[index])+'_halpha.txt', dtype='string', usecols=(7,8), unpack=True)
+                        hheight, hfwhm = np.loadtxt(halphaoutpath+images[j]+"_"+str(writeras[index])+'_halpha.txt', dtype='string', usecols=(7,8), unpack=True)
                         hheight[hheight == 'INDEF'] = '0.0'
                         hheight = np.asfarray(hheight,float)
                         hbest = np.argmax(hheight)
