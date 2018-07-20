@@ -113,8 +113,8 @@ for j in range(len(images)):
                     else:
                         iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
                         text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
-               except:
-                    text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail'))
+            except:
+                text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail'))
         else:
             print(splits[0])
 text.close()
