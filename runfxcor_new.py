@@ -10,13 +10,13 @@ iraf.rv()
 
 obsrun = 'Mar2016'
 #where the images and raw data are
-inpath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/'
+inpath = '/Volumes/MADDIE/'+obsrun+'/images/'
 #where you want the legend (which spectrum is run with which template) saved
-legendpath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/results/'
+legendpath = '/Volumes/MADDIE/'+obsrun+'/results/'
 #where you have the files.txt files that have which image corresponds with which raw image
-filepath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/'
+filepath = '/Volumes/MADDIE/'+obsrun+'/'
 #where you have the templates(the have the same start so I included the start here too)
-temppath = '/Users/Natalie/mann/templates/'
+temppath = 'Volumes/MADDIE/newtemplates/'
 #where you want the chosen template fxcor outputs saved(all fxcor outputs for each data run should be in the same place)
 outpath = '/Volumes/MADDIE/'+obsrun+'/results/donefxcor/'
 #where you want all fxcor outputs saved
