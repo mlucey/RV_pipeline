@@ -37,8 +37,6 @@ def wav(image):
     return np.linspace(image[0].header['CRVAL1'],image[0].header['CRVAL1']+(image[0].header['NAXIS1']-1)*image[0].header['CDELT1'],image[0].header['NAXIS1'])
 #keeps track of which spectrum was run with which template
 text = open(legendpath+'legend.txt','w')
-#keeps track of which spectrum did not correlate the halpha region
-halphatext = open(legendpath+'noHalphalgend.txt','w')
 
 images = np.loadtxt(filepath+'files.txt', usecols = (1,),dtype = str)
 origimages = np.loadtxt(filepath+'files.txt', usecols = (0,),dtype = str)
