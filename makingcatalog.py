@@ -10,10 +10,21 @@ import csv
 # making catalog
 #make sure that you renamed the old catalog file!!!
 
+#list of each obsrun
 obsrun = ['Apr2018','Mar2018','Dec2016','Feb2017','Feb2016','Mar2016']
+#cluster name for catalog
 cluster = 'prae'
+#first digit of ra (for seperating clusters)
 first = '8'
-#put in 8 for praesepe and 3 for pleiades
+#path to location of each obs run directory
+inpath = '/Volumes/MADDIE/'
+#path to the rvcorrect and rv.dat file once in the obsrun directory
+rvpath = '/results/'
+#path to the fits files once in obsrun directory
+imagepath = '/images/'
+#path to the final fxcor outputs once in obsrun directory
+fxcorpath = '/results/donefxcor'
+
 
 #creating lists to hold all info
 allras = []
@@ -45,17 +56,17 @@ halpharuns = []
 
 for i in obsrun:
     #loading in rvs and aps from rv.dat and rvcorrect.txt
-    baps = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rvcorrect.txt', usecols = (10,))
-    rvs = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rv.dat', usecols = (2,),dtype =str)
-    files = np.loadtxt('/Volumes/MADDIE/'+i+'/files.txt', usecols = (1,), dtype = str)
-    origfiles = np.loadtxt('/Volumes/MADDIE/'+i+'/files.txt', usecols = (0,), dtype = str)
+    baps = np.loadtxt(inpath+i+rvpath+'rvcorrect.txt', usecols = (10,))
+    rvs = np.loadtxt(inpath+i+rvpath+'rv.dat', usecols = (2,),dtype =str)
+    files = np.loadtxt(inpath+i+'/files.txt', usecols = (1,), dtype = str)
+    origfiles = np.loadtxt(inpath+i+'/files.txt', usecols = (0,), dtype = str)
     #getting images,ra and heights from rvcorrect.txt
-    bras = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rvcorrect.txt', usecols = (8,),dtype = str)
-    bimages = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rvcorrect.txt', usecols = (13,),dtype = str)
-    bhghts = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rvcorrect.txt', usecols = (12,),dtype = str)
+    bras = np.loadtxt(inpath+i+rvpath+'rvcorrect.txt', usecols = (8,),dtype = str)
+    bimages = np.loadtxt(inpath+i+rvpath+'rvcorrect.txt', usecols = (13,),dtype = str)
+    bhghts = np.loadtxt(inpath+i+rvpath+'rvcorrect.txt', usecols = (12,),dtype = str)
     #get hjds, and verrs from rv.dat and rvcorrect files
-    bhjds = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rv.dat', usecols = (0,))
-    bverrs = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rvcorrect.txt', usecols = (11,),dtype = str)
+    bhjds = np.loadtxt(inpath+i+rvpath+'rv.dat', usecols = (0,))
+    bverrs = np.loadtxt(inpath+i+rvpath+'rvcorrect.txt', usecols = (11,),dtype = str)
     #get ra, dec, id, rs, r-js, and aps from original images
     ogras = []
     checkras = []
@@ -64,8 +75,8 @@ for i in obsrun:
     ogr_js = []
     ogids = []
     for j in range(len(files)):
-        file = fits.open('/Volumes/MADDIE/'+i+'/images/'+files[j]+'_nosky.fits')
-        origfile = fits.open('/Volumes/MADDIE/'+i+'/images/'+origfiles[j]+'.fits')
+        file = fits.open(inpath+i+imagepath+files[j]+'_nosky.fits')
+        origfile = fits.open(inpath+i+imagepath+origfiles[j]+'.fits')
         head = origfile[0].header
         #get info out of original headers
         for k in range(1,101):
@@ -84,7 +95,7 @@ for i in obsrun:
                 ogr_js.append(r_j)
                 ogids.append(id)
     #makes a list of all the fxcor output files
-    fitsfiles = [f for f in listdir('/Volumes/MADDIE/'+i+'/results/donefxcor') if isfile(join('/Volumes/MADDIE/'+i+'/results/donefxcor', f))]
+    fitsfiles = [f for f in listdir(inpath+i+fxcorpath) if isfile(join(inpath+i+fxcorpath', f))]
 
     reds = []
     redaps = []
@@ -95,7 +106,7 @@ for i in obsrun:
     temprvs = []
     for j in reds:
         #grabs rv and ap info for all the skyflats
-        temprv = np.loadtxt('/Volumes/MADDIE/'+i+'/results/donefxcor/'+str(j), usecols = (11,))
+        temprv = np.loadtxt(inpath+i+fxcorpath+'/'+str(j), usecols = (11,))
         temprvs.append(temprv)
         reds1 = j.split("s")
         reds2 = reds1[1].split(".")
@@ -145,7 +156,7 @@ for i in obsrun:
 
 
 #final catalog with every spectrum as it's own row
-with open('/Volumes/MADDIE/halphaobs_'+cluster+'_catalog.csv','w') as f:
+with open(inpath+'halphaobs_'+cluster+'_catalog.csv','w') as f:
     writer = csv.writer(f)
     writer.writerow(['RA','DEC','r','r-J','obsrun','image','ap','hjd','rv','err','hght'])
     for i in range(len(allras)):
