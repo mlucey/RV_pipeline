@@ -77,45 +77,54 @@ for j in range(len(images)):
         splits = (file[0].header['APID'+str(i+1)]).split(" ")
         if splits[0] in ids:
             index = ids.index(splits[0])
-            flux = file[0].data[i][200:1800]
-            errs = np.sqrt(abs(flux))
-            imagewav = wav(file)
-            objwav = imagewav[200:1800]
-            listflux = flux.tolist()
-            maxindex = listflux.index(max(flux))
             try:
+                #running the spectrum against every template in fxcor
                     for k in range(len(templatelist)):
                         try:
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[k]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample = region, output = alloutpath+images[j]+"_"+str(writeras[index])+'_all', verbose='txtonly', interactive='no')
                         except:
                             print(images[j]+' and '+templatelist[k]+' did not work')
+                    #pulling the ccf heights and fwhm for each template out of fxcor output
                     height, fwhm = np.loadtxt(alloutpath+images[j]+"_"+str(writeras[index])+'_all.txt', dtype='string', usecols=(7,8), unpack=True)
                     height[height == 'INDEF'] = '0.0'
                     height = np.asfarray(height,float)
+                    #finding the highest ccf peak (gives the best match)
                     best = np.argmax(height)
+                    #if ccf peak is less than .5 it will not pass the quality check so we try halpha analysis
                     if height[best] < .5:
+                        #running the spectrum against all the templates with halpha emission in fxcor
                         for k in range(len(halphatemplatelist)):
                             try:
                                 iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+halphatemplatelist[k]+'.fits',apertures = str(int(aps[index])), function = 'gaussian', background='INDEF', osample='*', rsample = '*', output = halphaoutpath+images[j]+'_'+str(writeras[index])+'_halpha', verbose='txtonly', interactive='no')
                             except:
                                 print('Halpha '+images[j]+' and '+halphatemplatelist[k]+' did not work')
+                        # grabbing the ccf peak heights from the halpha analysis
                         hheight, hfwhm = np.loadtxt(halphaoutpath+images[j]+"_"+str(writeras[index])+'_halpha.txt', dtype='string', usecols=(7,8), unpack=True)
                         hheight[hheight == 'INDEF'] = '0.0'
                         hheight = np.asfarray(hheight,float)
+                        #finding the highest ccf peak
                         hbest = np.argmax(hheight)
+                        # if the ccf peak from halpha analysis is higher than the previous ccf peak we keep the halpha result
                         if height[best] < hheight[hbest]:
+                            #final run with best template to be used in final analysis later
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+halphatemplatelist[hbest]+'.fits',apertures = str(int(aps[index])), function = 'gaussian', background='INDEF', osample='*', rsample = '*', output = outpath+images[j]+'_'+str(writeras[index])+'', verbose='txtonly', interactive='no')
+                            #writing a legend to keep track of what the best template spectrum was
                             text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],halphatemplatelist[hbest],hrvs[hbest]))
+                           #writing a legend to keep track of which results come from halpha analysis
                             halphatext.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
                         else:
+                          # if the ccf peak did not increase with halpha analysis we go back and use the best template match from normal analysis
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
                             text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
                     else:
+                        #if the ccf peak is greater than 0.5 it passes that quality check and we use it in our final analysis
                         iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
                         text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
             except:
+                #prints fails if it fails to run
                 text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail'))
         else:
+            #prints ids of spectrum whose header info did not make it into the reduced header info (from mixup in dot iraf files)
             print(splits[0])
 text.close()
 halphatext.close()
