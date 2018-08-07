@@ -8,7 +8,7 @@ from pyraf import iraf
 from astropy.time import Time
 iraf.rv()
 
-obsrun = 'Mar2016'
+obsrun = 'Mar2018'
 #where the images and raw data are
 inpath = '/Volumes/MADDIE/'+obsrun+'/images/'
 #where you want the legend (which spectrum is run with which template) saved
@@ -43,7 +43,7 @@ def wav(image):
 #keeps track of which spectrum was run with which template
 text = open(legendpath+'legend.txt','w')
 #keeps track of which spectrum did not correlate the halpha region
-halphatext = open(legendpath+'Halphalgend.txt','w')
+halphatext = open(legendpath+'Halphalegend.txt','w')
 
 images = np.loadtxt(filepath+'files.txt', usecols = (1,),dtype = str)
 origimages = np.loadtxt(filepath+'files.txt', usecols = (0,),dtype = str)
@@ -118,3 +118,4 @@ for j in range(len(images)):
         else:
             print(splits[0])
 text.close()
+halphatext.close()
