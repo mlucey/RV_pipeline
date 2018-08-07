@@ -72,26 +72,27 @@ for j in range(len(images)):
         splits = (file[0].header['APID'+str(i+1)]).split(" ")
         if splits[0] in ids:
             index = ids.index(splits[0])
-            flux = file[0].data[i][200:1800]
-            errs = np.sqrt(abs(flux))
-            imagewav = wav(file)
-            objwav = imagewav[200:1800]
-            listflux = flux.tolist()
-            maxindex = listflux.index(max(flux))
             try:
+                #runs the spectrum against every template in fxcor, saves all the results in one output file
                     for k in range(len(templatelist)):
                         try:
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[k]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample = region, output = outpath+images[j]+"_"+str(writeras[index])+'_all', verbose='txtonly', interactive='no')
                         except:
                             print(images[j]+' and '+templatelist[k]+' did not work')
+                    # grabs the ccf peak heights from the fxcor output files       
                     height, fwhm = np.loadtxt(outpath+images[j]+"_"+str(writeras[index])+'_all.txt', dtype='string', usecols=(7,8), unpack=True)
                     height[height == 'INDEF'] = '0.0'
                     height = np.asfarray(height,float)
+                    #grabs the heighest ccf peak (the best match)
                     best = np.argmax(height)
+                    #runs fxcor again with only the best template match for final analysis
                     iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
+                    #writes a legend file to keep track of which is the best template match for each spectrum
                     text.write("%8s %4s %8s %8.3f \n" % (ids[index],ras[index],templatelist[best],rvs[best]))
                except:
+                    #writes fail in the file if fxcor fails for all templates
                     text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail'))
         else:
+            #prints the ids of stars whose header info did not make it into the final reduced headers (from mixup with dot iraf files)
             print(splits[0])
 text.close()
