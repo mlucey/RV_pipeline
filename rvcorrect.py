@@ -43,7 +43,7 @@ ids = []
 for i in bids:
     ids.append(removeb(i))
 
-
+#remove colons from ra
 matchids = [s.replace(':', '') for s in ids]
 #create rvcorrect file
 text = open(outpath,'w')
