@@ -5,23 +5,23 @@ import os
 from os import listdir
 from os.path import isfile, join
 
-# creates a file to run in rvcorrect to get heliocentrically corrected rvs 
-#After you have run it paste this line into a pyraf window: 
+# creates a file to run in rvcorrect to get heliocentrically corrected rvs
+#After you have run it paste this line into a pyraf window:
 #rvcorrect f=rvcorrect.txt > rv.dat
 
-obsrun = 'Mar2016'
+obsrun = 'Mar2018'
 
-inpath = '/Users/Natalie/mann/fxcor_rv/'+obsrun+'/'
+inpath = '/Volumes/MADDIE/'+obsrun
 #location of files.txt with list of images and correspondng orig images
 file = inpath+'/files.txt'
 #location of fxcor outputs (created in runfxcor_new.py)
-fxcorpath = inpath+'/results/'
+fxcorpath = inpath+'/results/donefxcor'
 #location of halpha legend file (created in run_fxcor_new.py)
 legend = inpath+'/results/legend.txt'
 #where you want to write the rvcorrect.txt file
 outpath = inpath+'/results/rvcorrect.txt'
 #where you have the reduced data
-imagepath = inpath
+imagepath = inpath+'/images/'
 #if running in python 3, this will be necessary, removes a weird b that shows up in front of strings
 def removeb(input):
     if input[0] == 'b':
@@ -53,7 +53,7 @@ for l in range(len(fitsfiles)):
     splits = fitsfiles[l].split('_')
     if splits[0][0] == 'P':
         files.append(fitsfiles[l])
-        
+
 dates = []
 ras =[]
 decs = []
@@ -71,7 +71,7 @@ for i in range(len(images)):
     decs.append(DEC)
     ut= head['UT']
     uts.append(ut)
-    
+
 #getting info out of fxcor output files
 for m in range(len(files)):
     parts = files[m].split("_")
