@@ -15,27 +15,7 @@ cluster = 'prae'
 first = '8'
 #put in 8 for praesepe and 3 for pleiades
 
-def number1(x):
-    a = (ras[x],decs[x],int(ids[x]),rs[x],r_js[x])
-    return list(a)
-
-def onewrite(x):
-    a = (obsrun+images[x],int(aps[x]),'{:.3f}'.format(float(hjds[x]-2400000)),'{:.3f}'.format(rvs[x]),'{:.3f}'.format(verrs[x]),'{:.3f}'.format(heights[x]))
-    return list(a)
-
-def list_duplicates_of(seq,item):
-    start_at = -1
-    locs = []
-    while True:
-        try:
-            loc = seq.index(item,start_at+1)
-        except ValueError:
-            break
-        else:
-            locs.append(loc)
-            start_at = loc
-    return locs
-
+#creating lists to hold all info
 allras = []
 alldecs = []
 allids = []
@@ -62,10 +42,13 @@ halphahghts = []
 halpharuns = []
 
 
-#loading in rvs and aps from rv.dat and rvcorrect.txt
+
 for i in obsrun:
+    #grabs ras of stars that's final rv is from halpha analysis
     ohalpharas = np.loadtxt('/Volumes/MADDIE/'+i+'/results/Halphalegend.txt', usecols = (1,),dtype=str)
+    #removes colons in the ra
     onehalpharas = [s.replace(':', '') for s in ohalpharas]
+    #loading in rvs and aps from rv.dat and rvcorrect.txt
     baps = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rvcorrect.txt', usecols = (10,))
     rvs = np.loadtxt('/Volumes/MADDIE/'+i+'/results/rv.dat', usecols = (2,),dtype =str)
     files = np.loadtxt('/Volumes/MADDIE/'+i+'/files.txt', usecols = (1,), dtype = str)
@@ -88,6 +71,7 @@ for i in obsrun:
         file = fits.open('/Volumes/MADDIE/'+i+'/images/'+files[j]+'_nosky.fits')
         origfile = fits.open('/Volumes/MADDIE/'+i+'/images/'+origfiles[j]+'.fits')
         head = origfile[0].header
+        #get info out of original headers
         for k in range(1,101):
             splits = head['SLFIB'+str(k)].split(" ")
             if splits[1] == '1':
@@ -103,15 +87,18 @@ for i in obsrun:
                 ogrs.append(r)
                 ogr_js.append(r_j)
                 ogids.append(id)
+    #makes a list of all the fxcor output files
     fitsfiles = [f for f in listdir('/Volumes/MADDIE/'+i+'/results/donefxcor') if isfile(join('/Volumes/MADDIE/'+i+'/results/donefxcor', f))]
 
     reds = []
     redaps = []
+    #grabs all the fxcor outputs for the skyflats
     for k in range(len(fitsfiles)):
         if fitsfiles[k][0] == 'R':
             reds.append(fitsfiles[k])
     temprvs = []
     for j in reds:
+        #grabs rv and ap info for all the skyflats
         temprv = np.loadtxt('/Volumes/MADDIE/'+i+'/results/donefxcor/'+str(j), usecols = (11,))
         temprvs.append(temprv)
         reds1 = j.split("s")
@@ -126,7 +113,9 @@ for i in obsrun:
     hjds = []
     verrs = []
     for l in range(len(rvs)):
+        #makes sure there is a skyflat for each aperture used in the object pointings
         if str(int(baps[l])) in redaps:
+            #matches the aperutre from the skyflat to the object
             index = redaps.index(str(int(baps[l])))
             aps.append(baps[l])
             images.append(bimages[l])
@@ -135,14 +124,17 @@ for i in obsrun:
             hjds.append(bhjds[l])
             verrs.append(bverrs[l])
             if rvs[l] != 'INDEF':
-                #donerv.append(str("{0:.3f}".format(float(rvs[l]))))
+                #subtracts the velocity of the skyflat specturm of the aperture that matches the object spectum from that spectrums heliocentrically corrected rv
                 donerv.append(str("{0:.3f}".format(float(rvs[l])-float(temprvs[index]))))
             else:
                 donerv.append('INDEF')
         else:
+            #prings the image, ap and observational run of spectrum that do not have a skyflat for that aperture.
             print(bimages[l],baps[l],i)
     for k in range(len(ras)):
+        #matches orig header info and rvcorrect info
         index = checkras.index(str(ras[k]))
+        #writing all info into one big list for each colomn in final catalog
         allras.append(ogras[index])
         alldecs.append(ogdecs[index])
         allrs.append(ogrs[index])
@@ -155,6 +147,7 @@ for i in obsrun:
         allerrs.append(verrs[k])
         allhghts.append(hghts[k])
         if ras[k] in onehalpharas:
+            #makes additional list for stars that went through halpha analysis
             halpharas.append(ogras[index])
             halphadecs.append(ogdecs[index])
             halphars.append(ogrs[index])
@@ -167,27 +160,17 @@ for i in obsrun:
             halphaerrs.append(verrs[k])
             halphahghts.append(hghts[k])
 
+#final catalog with every spectrum as it's own row
 with open('/Volumes/MADDIE/halphaobs_'+cluster+'_catalog.csv','w') as f:
     writer = csv.writer(f)
     writer.writerow(['RA','DEC','r','r-J','obsrun','image','ap','hjd','rv','err','hght'])
     for i in range(len(allras)):
         writer.writerow([allras[i],alldecs[i],allrs[i],allr_js[i],allruns[i],allimages[i],allaps[i],"{0:.3f}".format(allhjds[i]-2400000),allrvs[i],allerrs[i],allhghts[i]])
 
-
-
+#catalog that only has stars that went through halpha analysis
 with open('/Volumes/MADDIE/halphaonly_'+cluster+'_catalog.csv','w') as f:
     writer = csv.writer(f)
     writer.writerow(['RA','DEC','r','r-J','obsrun','image','ap','hjd','rv','err','hght'])
     for i in range(len(halpharas)):
         writer.writerow([halpharas[i],halphadecs[i],halphars[i],halphar_js[i],halpharuns[i],halphaimages[i],halphaaps[i],"{0:.3f}".format(halphahjds[i]-2400000),halpharvs[i],halphaerrs[i],halphahghts[i]])
-
-norepeats = list(set(allras))
-with open('/Volumes/MADDIE/halpha_'+cluster+'_catalog.csv','w') as f:
-    writer = csv.writer(f)
-    for i in range(len(norepeats)):
-        indexs = list_duplicates_of(allras,norepeats[i])
-        row = [allras[indexs[0]],alldecs[indexs[0]],allrs[indexs[0]],allr_js[indexs[0]],allruns[indexs[0]],allimages[indexs[0]],allaps[indexs[0]],"{0:.3f}".format(allhjds[indexs[0]]-2400000),allrvs[indexs[0]],allerrs[indexs[0]],allhghts[indexs[0]]]
-        for j in range(1,len(indexs)-1):
-            row = row+[allruns[indexs[j]],allimages[indexs[j]],allaps[indexs[j]],"{0:.3f}".format(allhjds[indexs[j]]-2400000),allrvs[indexs[j]],allerrs[indexs[j]],allhghts[indexs[j]]]
-        writer.writerow(row)
 
