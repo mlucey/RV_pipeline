@@ -8,7 +8,12 @@ from pyraf import iraf
 from astropy.time import Time
 iraf.rv()
 
+#**need to edit obsrun and the paths**
+
 obsrun = ['Apr2018','Mar2018','Dec2016','Feb2017','Feb2016','Mar2016']
+
+def wav(image):
+    return np.linspace(image[0].header['CRVAL1'],image[0].header['CRVAL1']+(image[0].header['NAXIS1']-1)*image[0].header['CDELT1'],image[0].header['NAXIS1'])
 
 for t in obsrun:
     #where the images and raw data are
@@ -31,7 +36,6 @@ for t in obsrun:
     rvs, rverrs = np.loadtxt(temppath+'RV_singlesource.txt', dtype='float', skiprows=1, usecols=(10,12), unpack=True)
     hrvs, hrverrs = np.loadtxt(temppath+'RV_halpha.txt', dtype='float', skiprows=1, usecols=(10,12), unpack=True)
 
-
     #feb2017 region of spectrum to correlate if you want to avoid halpha
     if t == 'Feb2017':
         region = "6425-6550,6570-6800"
@@ -39,9 +43,6 @@ for t in obsrun:
     else:
         region = "6300-6550,6570-6800"
 
-
-    def wav(image):
-        return np.linspace(image[0].header['CRVAL1'],image[0].header['CRVAL1']+(image[0].header['NAXIS1']-1)*image[0].header['CDELT1'],image[0].header['NAXIS1'])
     #keeps track of which spectrum was run with which template
     text = open(legendpath+'legend.txt','w')
     #keeps track of which spectrum did not correlate the halpha region
