@@ -108,15 +108,15 @@ for t in obsrun:
                         hbest = np.argmax(hheight)
                         if height[best] < hheight[hbest]:
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+halphatemplatelist[hbest]+'.fits',apertures = str(int(aps[index])), function = 'gaussian', background='INDEF', osample='*', rsample = '*', output = outpath+images[j]+'_'+str(writeras[index])+'', verbose='txtonly', interactive='no')
-                            text.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],halphatemplatelist[hbest],hrvs[hbest],images[j]+'_'+aps[index]))
+                            text.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],halphatemplatelist[hbest],hrvs[hbest],str(images[j])+'_'+str(int(aps[index]))))
                             print(images[j],aps[index])
-                            halphatext.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],templatelist[best],rvs[best],images[j]+'_'+aps[index]))
+                            halphatext.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],templatelist[best],rvs[best],str(images[j])+'_'+str(int(aps[index]))))
                         else:
                             iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
-                            text.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],templatelist[best],rvs[best],images[j]+'_'+aps[index]))
+                            text.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],templatelist[best],rvs[best],str(images[j])+'_'+str(int(aps[index]))))
                     else:
                         iraf.rv.fxcor(inpath+images[j]+'_nosky.fits',temppath+'new_'+templatelist[best]+'.fits',apertures = str(int(aps[index])), function = "gaussian", background="INDEF", osample = region, rsample =region, output = outpath+images[j]+"_"+str(writeras[index]), verbose='txtonly', interactive='no')
-                        text.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],templatelist[best],rvs[best],images[j]+'_'+aps[index]))
+                        text.write("%8s %4s %8s %8.3f %8s \n" % (ids[index],ras[index],templatelist[best],rvs[best],str(images[j])+'_'+str(int(aps[index]))))
                 except:
                     text.write("%8s %4s %8s %4s \n" % (ids[index],ras[index],'fail','fail'))
             else:
